@@ -1,0 +1,27 @@
+# Quarto / Typst - pliki tymczasowe przy generowaniu PDF
+.quarto/
+*.typ
+*_files/
+
+# Surowe wyniki symulacji (duze; odtwarzane przez /build/bin/fire)
+*.data
+
+# Python
+__pycache__/
+*.pyc
+
+# Logi i pliki tymczasowe
+*.log
+*.tmp
+*.bak
+*~
+
+# Edytory / IDE
+.vscode/
+.idea/
+*.swp
+
+# Systemowe
+Thumbs.db
+desktop.ini
+.DS_Store
