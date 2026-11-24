@@ -1,19 +1,31 @@
 # Wykresy i animacje do sprawozdania. Uruchamiac w katalogu z plikami out_*.data, fuel_*.data, wind_*.data:
 #   python3 /code/examples/fire/burned_area.py > area.dat
 #   gnuplot /code/examples/fire/plot.gp
-# Wyniki: frames/*.png, anim.gif (temperatura), fuel_anim.gif (paliwo), wind_anim.gif (wiatr)
+# Wyniki: frames/*.png, anim.gif, temp_terrain_wind_anim.gif, fuel_anim.gif, wind_anim.gif
+# Tytuly: t w godzinach rzeczywistych (i*dt*H); paliwo z obrysem historycznym danego dnia.
 
 H = 25.0          # godzin rzeczywistych na 1 s symulacji (hours_per_s w fire.hpp)
 dt = 1e-3         # krok czasowy
 last = 6000       # ostatni krok
 every_n = 100     # co ile krokow sa zapisane pliki
-outline = "/code/examples/fire/obrys_pozaru.dat"   # rzeczywisty obrys pozaru (23.04.2020)
+outline = "/code/examples/fire/obrys_pozaru.dat"   # rzeczywisty obrys koncowy (23.04.2020)
 
 # data i godzina rzeczywista dla kroku i (t = 0 <-> 19.04.2020 20:00)
+# t na wykresach = czas rzeczywisty w godzinach od zaplonu (i*dt*H)
 hrs(i) = 20 + i*dt*H
 mins(i) = int(60 * hrs(i) + 0.5)   # minuty od 19.04 00:00 (zaokraglenie - bez bledow typu 02:29)
 date(i) = sprintf("%02d.04 %02d:%02d", 19 + mins(i) / 1440, (mins(i) / 60) % 24, mins(i) % 60)
-label(i) = sprintf("krok %d (t = %.1f s, ok. %s)", i, i*dt, date(i))
+label(i) = sprintf("krok %d (t = %.1f h, %s)", i, i*dt*H, date(i))
+outline_dir = "/code/examples/fire"
+# historyczne obrysy skumulowanego obszaru wypalonego (mapa BbPN): 20/21/22/23.04
+outline_for(i) = (i <= 500) ? outline_dir."/obrys_20.dat" : \
+                 (i <= 1500) ? outline_dir."/obrys_21.dat" : \
+                 (i <= 2500) ? outline_dir."/obrys_22.dat" : \
+                               outline_dir."/obrys_23.dat"
+outline_title(i) = (i <= 500) ? "obrys rzeczywisty (20.04)" : \
+                   (i <= 1500) ? "obrys rzeczywisty (21.04)" : \
+                   (i <= 2500) ? "obrys rzeczywisty (22.04)" : \
+                                 "obrys rzeczywisty (23.04)"
 
 set size ratio -1
 set xrange [0:100]
@@ -53,12 +65,20 @@ do for [i in "0 500 1000 1500 2000 2500 3000 3400 4000 6000"] {
     set output sprintf("frames/fuel_%05d.png", n)
     set title "Paliwo - ".label(n)
     plot sprintf("fuel_%d.data", n) using 1:2:3 with image notitle, \
-         outline with lines lw 2 dt 2 lc rgb "#d01010" title "obrys rzeczywisty (23.04)"
+         outline_for(n) with lines lw 2 dt 2 lc rgb "#d01010" title outline_title(n)
 
     @fuel_palette
     set output sprintf("frames/wind_%05d.png", n)
     set title "Wiatr b = (bx, by) - ".label(n)
     plot "fuel_0.data" using 1:2:3 with image notitle, \
+         sprintf("wind_%d.data", n) using 1:2:($3/10):($4/10) with vectors head filled size 1,20 lc rgb "#1040c0" notitle
+
+    # temperatura na tle biezacego paliwa (ubywa) + wektory wiatru
+    @temp_palette
+    set output sprintf("frames/temp_terrain_wind_%05d.png", n)
+    set title "Temperatura + paliwo + wiatr - ".label(n)
+    plot sprintf("fuel_%d.data", n) using 1:2:3 with image notitle, \
+         sprintf("out_%d.data", n) using 1:2:($3 > 320 ? $3 : 1/0) with image notitle, \
          sprintf("wind_%d.data", n) using 1:2:($3/10):($4/10) with vectors head filled size 1,20 lc rgb "#1040c0" notitle
 }
 
@@ -107,7 +127,7 @@ set output "fuel_anim.gif"
 do for [n = 0:last:every_n] {
     set title "Paliwo - ".label(n)
     plot sprintf("fuel_%d.data", n) using 1:2:3 with image notitle, \
-         outline with lines lw 2 dt 2 lc rgb "#d01010" title "obrys rzeczywisty (23.04)"
+         outline_for(n) with lines lw 2 dt 2 lc rgb "#d01010" title outline_title(n)
 }
 
 @anim_term
@@ -115,6 +135,17 @@ set output "wind_anim.gif"
 do for [n = 0:last:every_n] {
     set title "Wiatr b = (bx, by) - ".label(n)
     plot "fuel_0.data" using 1:2:3 with image notitle, \
+         sprintf("wind_%d.data", n) using 1:2:($3/10):($4/10) with vectors head filled size 1,20 lc rgb "#1040c0" notitle
+}
+
+# temperatura + biezace paliwo (ubywa) + wiatr
+@anim_term
+@temp_palette
+set output "temp_terrain_wind_anim.gif"
+do for [n = 0:last:every_n] {
+    set title "Temperatura + paliwo + wiatr - ".label(n)
+    plot sprintf("fuel_%d.data", n) using 1:2:3 with image notitle, \
+         sprintf("out_%d.data", n) using 1:2:($3 > 320 ? $3 : 1/0) with image notitle, \
          sprintf("wind_%d.data", n) using 1:2:($3/10):($4/10) with vectors head filled size 1,20 lc rgb "#1040c0" notitle
 }
 unset output

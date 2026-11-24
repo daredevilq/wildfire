@@ -555,7 +555,7 @@ cont> mkdir -p /code/examples/fire/wyniki && cd /code/examples/fire/wyniki
 cont> /build/bin/fire 100 2 8
 ```
 
-Wykresy, animacje i tabela powierzchni wypalonej (`gnuplot`, `python3-numpy` doinstalowane w kontenerze przez `apt-get install gnuplot-nox python3-numpy`):
+Wykresy, animacje i tabela powierzchni wypalonej (`gnuplot`, `python3-numpy` doinstalowane w kontenerze przez `apt-get install gnuplot-nox python3-numpy`). Skrypt `plot.gp` oczekuje też plików `obrys_20.dat`…`obrys_23.dat` (obrysy historyczne) obok `obrys_pozaru.dat`:
 
 ```bash
 cont> python3 /code/examples/fire/burned_area.py > area.dat
@@ -582,7 +582,7 @@ cont> gnuplot /code/examples/fire/plot.gp
 
 ### 6.3. Wybrane kroki czasowe — rozkład paliwa
 
-Czerwona przerywana linia — obrys rzeczywistego pożarzyska z 23.04.2020.
+Na każdej klatce zaznaczono **historyczny obszar spalony do danego dnia** (powierzchnie jak na mapie zmian zasięgu, Rys. 2; obrysy `kod/obrys_20.dat` … `obrys_23.dat`): półprzezroczysta czerwona plama + przerywana granica. Obrysy 20–22.04 to wycinki sprawdzonego obrysu 23.04 wzdłuż osi wzrostu NE→SW, dopasowane do 570 / 1690 / 4600 ha — zagnieżdżone i w tym samym układzie co porównanie końcowe. Symulacja = ciemny ubytek paliwa.
 
 | Krok 500 (20.04 08:30) | Krok 1500 (21.04 09:30) |
 |:---:|:---:|
@@ -592,15 +592,23 @@ Czerwona przerywana linia — obrys rzeczywistego pożarzyska z 23.04.2020.
 |:---:|:---:|
 | ![F 2500](frames/fuel_02500.png) | ![F 3400](frames/fuel_03400.png) |
 
-Pozostałe klatki (kroki 0–3000 co 500 oraz kroki 3400, 4000 i 6000) znajdują się w katalogu [`frames/`](frames/): `temp_*.png`, `fuel_*.png`, `wind_*.png`.
+Pozostałe klatki (kroki 0–3000 co 500 oraz kroki 3400, 4000 i 6000) znajdują się w katalogu [`frames/`](frames/): `temp_*.png`, `fuel_*.png`, `wind_*.png`, `temp_terrain_wind_*.png`.
 
 ### 6.4. Animacje
 
+Na tytułach klatek czas podano jako **$t$ w godzinach rzeczywistych** od zapłonu (19.04 ok. 20:00), wraz z datą: $t = i\cdot\Delta t\cdot 25$.
+
 #### Animacja pożaru (temperatura)
 
-(W wersji PDF widoczna jest tylko pierwsza klatka animacji — pełne animacje: `anim.gif`, `fuel_anim.gif`, `wind_anim.gif`.)
+(W wersji PDF widoczna jest tylko pierwsza klatka animacji — pełne animacje: `anim.gif`, `temp_terrain_wind_anim.gif`, `fuel_anim.gif`, `wind_anim.gif`.)
 
 ![Animacja temperatury](anim.gif)
+
+#### Animacja temperatury z paliwem i wiatrem
+
+Temperatura na tle **bieżącego** rozkładu paliwa (widać ubytek jak w animacji paliwa) oraz wektorów wiatru $\mathbf b(x,y,t)$:
+
+![Animacja temperatury + paliwo + wiatr](temp_terrain_wind_anim.gif)
 
 #### Animacja wypalania paliwa
 
@@ -683,11 +691,12 @@ Porównanie obszaru wypalonego w symulacji z obrysem rzeczywistym (23.04, Rys. 3
 |---|---|
 | `fire_report.md`, `fire_report.pdf` | niniejsze sprawozdanie (źródło Markdown i wersja PDF) |
 | `kod/fire.hpp`, `kod/fire.cpp`, `kod/CMakeLists.txt` | zmodyfikowany kod symulacji (kopia z `iga-ads/examples/fire/`) |
-| `kod/plot.gp` | skrypt gnuplota: klatki PNG i animacje GIF |
+| `kod/plot.gp` | skrypt gnuplota: klatki PNG i animacje GIF (czas $t$ w godzinach) |
 | `kod/burned_area.py` | powierzchnia wypalona w czasie i zgodność z obrysem rzeczywistym |
-| `kod/obrys_pozaru.dat` | przybliżony obrys pożarzyska z 23.04.2020 w układzie domeny |
-| `frames/` | klatki PNG: `temp_*`, `fuel_*`, `wind_*`, `fuel_map`, `init_state`, `area` |
-| `anim.gif`, `fuel_anim.gif`, `wind_anim.gif` | animacje temperatury, paliwa i wiatru |
+| `kod/obrys_pozaru.dat`, `obrys_20.dat`…`obrys_23.dat` | obrys końcowy (23.04) oraz skumulowane obrysy historyczne 20–23.04 |
+| `kod/postprocess_viz.py`, `rebuild_cmp2.py` | poprawki tytułów / kompozyt temperatura+teren+wiatr / porównanie obszarów |
+| `frames/` | klatki PNG: `temp_*`, `fuel_*`, `wind_*`, `temp_terrain_wind_*`, `fuel_map`, `init_state`, `area` |
+| `anim.gif`, `temp_terrain_wind_anim.gif`, `fuel_anim.gif`, `wind_anim.gif` | animacje temperatury, temperatury+paliwa+wiatru, paliwa i wiatru |
 | `area.dat` | tabela powierzchni wypalonej (co 100 kroków) |
 | `img/` | rysunki pożaru z literatury |
 
